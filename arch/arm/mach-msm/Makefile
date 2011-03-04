@@ -1,3 +1,6 @@
+
+CFLAGS_REMOVE_board-msm7x27.o = -Werror
+
 obj-y += io.o dma.o memory.o
 obj-y += clock.o
 obj-y += modem_notifier.o
@@ -108,6 +111,10 @@ obj-$(CONFIG_ARCH_MSM8X60) += clock-rpm.o spm.o restart.o
 
 ifdef CONFIG_ARCH_MSM8X60
 	obj-$(CONFIG_CPU_IDLE) += cpuidle.o
+endif
+
+ifeq ($(TARGET_BUILD_VARIANT),user)
+EXTRA_CFLAGS		+= -DVERSION_USER
 endif
 
 obj-$(CONFIG_MACH_MSM8X60_RUMI3) += board-msm8x60.o

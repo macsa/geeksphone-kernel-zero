@@ -29,7 +29,7 @@ obj-$(CONFIG_USB_CI13XXX)	+= ci13xxx_udc.o
 obj-$(CONFIG_USB_S3C_HSOTG)	+= s3c-hsotg.o
 obj-$(CONFIG_USB_LANGWELL)	+= langwell_udc.o
 obj-$(CONFIG_USB_MSM_72K)	+= msm72k_udc.o
-
+obj-y	                        += battery_charger_usb.o
 #
 # USB gadget drivers
 #
@@ -51,6 +51,7 @@ endif
 ifeq ($(CONFIG_USB_ANDROID_RNDIS),y)
 F_RNDIS = rndis.o f_rndis.o
 endif
+
 
 g_zero-objs			:= zero.o
 g_audio-objs			:= audio.o

@@ -77,7 +77,51 @@ MODULE_PARM_DESC(product_id, "USB device product id");
 
 /* serial number */
 #define MAX_SERIAL_LEN 256
-static char serial_number[MAX_SERIAL_LEN] = "1234567890ABCDEF";
+
+// we should define a string to compile with
+
+#ifdef SH8138U
+static char serial_number[MAX_SERIAL_LEN] = "SH8138U";		// should be modified 20101201
+#define DFPID           0x9403
+#endif
+
+
+#ifdef Haier
+
+#ifdef msm7627_ffa
+static char serial_number[MAX_SERIAL_LEN] = "HW-N6W";		// should be modified 20101201
+#define DFPID           0x9018
+#endif
+
+#ifdef msm7627_evdo
+static char serial_number[MAX_SERIAL_LEN] = "HE-N6E";		// should be modified 20101201
+#define DFPID           0x9018
+#endif
+
+#else   //Haier
+
+#ifdef msm7627_ffa
+static char serial_number[MAX_SERIAL_LEN] = "msm7627_ffa";		// should be modified 20101201
+#define DFPID           0x9018
+#endif
+#ifdef msm7627_evdo
+static char serial_number[MAX_SERIAL_LEN] = "msm7627_evdo";		// should be modified 20101201
+#define DFPID           0x9018
+#endif
+
+#endif  //Haier
+
+
+#ifdef msm7627_plumcu
+static char serial_number[MAX_SERIAL_LEN] = "msm7627_plumcu";		// should be modified 20101201
+#define DFPID           0x9403
+#endif
+
+#ifdef SH8198U
+static char serial_number[MAX_SERIAL_LEN] = "SH8198U";		// should be modified 20101201
+#define DFPID           0x9403
+#endif
+
 static struct kparam_string kps = {
 	.string			= serial_number,
 	.maxlen			= MAX_SERIAL_LEN,

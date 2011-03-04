@@ -468,6 +468,29 @@ static int msm_gpio_dev_pm_resume(struct device *dev)
 	return msm_gpio_resume(msm_gpio);
 }
 
+void *msm_gpio_get_regs(struct gpio_chip *chip)
+{
+	struct msm_gpio_dev *msm_gpio = TO_MSM_GPIO_DEV(chip);
+	return &(msm_gpio->regs);
+}
+EXPORT_SYMBOL_GPL(msm_gpio_get_regs);
+
+void msm_gpio_set_bit(unsigned n, void *regs)
+{
+	struct msm7200a_gpio_regs *_regs = regs;
+	void __iomem *reg = _regs->out;
+	writel(readl(reg) | bit(n), reg);
+}
+EXPORT_SYMBOL_GPL(msm_gpio_set_bit);
+
+void msm_gpio_clr_bit(unsigned n, void *regs)
+{
+	struct msm7200a_gpio_regs *_regs = regs;
+	void __iomem *reg = _regs->out;
+	writel(readl(reg) & ~bit(n), reg);
+}
+EXPORT_SYMBOL_GPL(msm_gpio_clr_bit);
+
 static SIMPLE_DEV_PM_OPS(msm_gpio_pm_ops,
 			 msm_gpio_dev_pm_suspend,
 			 msm_gpio_dev_pm_resume);

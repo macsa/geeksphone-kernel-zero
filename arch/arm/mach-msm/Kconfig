@@ -981,6 +981,13 @@ config SURF_FFA_GPIO_KEYPAD
 	help
 	  Select if the GPIO keypad is attached.
 
+config P15_GPIO_KEYPAD
+	bool "Config keypad pin for project P15"
+	depends on SURF_FFA_GPIO_KEYPAD = "y"
+	default n
+	help
+	  Config keypad pin for project P15.
+
 config CLOCK_BASED_SLEEP_LIMIT
 	default y
 	bool "Set sleep limitation based on clock usage"
