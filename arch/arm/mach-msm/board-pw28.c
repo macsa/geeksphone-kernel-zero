@@ -846,19 +846,6 @@ static struct lcdc_platform_data lcdc_pdata = {
 	.lcdc_power_save   = msm_fb_lcdc_power_save,
 };
 
-static struct msm_panel_common_pdata lcdc_gordon_panel_data = {
-	.panel_config_gpio = lcdc_gordon_config_gpios,
-	.gpio_num          = gpio_array_num,
-};
-
-static struct platform_device lcdc_gordon_panel_device = {
-	.name   = "lcdc_gordon_vga",
-	.id     = 0,
-	.dev    = {
-		.platform_data = &lcdc_gordon_panel_data,
-	}
-};
-
 static struct msm_panel_common_pdata lcdc_ili9325sim_panel_data = {
 	.panel_config_gpio = lcdc_gordon_config_gpios,
 	.gpio_num          = gpio_array_num,
@@ -1208,61 +1195,6 @@ static struct synaptics_i2c_rmi_platform_data synaptics_ts_data[] = {
     }
 };
 
-static int ssd2531_power(int on) {
-    static struct vreg *vreg;
-    if (!vreg) {
-#if defined(msm7627_ffa)
-        vreg = vreg_get(NULL, "gp4");
-#elif defined(msm7627_evdo)
-        vreg = vreg_get(NULL, "gp2");
-#else
-        vreg = NULL;
-#endif
-    }
-    if (vreg) {
-        if (on) {
-        	pr_info("ssd2531 power on\n");
-            
-        	gpio_tlmm_config(GPIO_CFG(124,  0, GPIO_INPUT, GPIO_PULL_UP, GPIO_2MA), GPIO_ENABLE);            
-    		gpio_tlmm_config(GPIO_CFG(30, 0, GPIO_OUTPUT,
-                GPIO_PULL_UP, GPIO_16MA), GPIO_ENABLE);
-            gpio_request(30, "touch power");
-            gpio_direction_output(30, 1);
-
-    		gpio_tlmm_config(GPIO_CFG(122, 0, GPIO_OUTPUT,
-                GPIO_PULL_UP, GPIO_16MA), GPIO_ENABLE);
-    		gpio_tlmm_config(GPIO_CFG(123, 0, GPIO_OUTPUT,
-                GPIO_PULL_UP, GPIO_16MA), GPIO_ENABLE);
-            vreg_enable(vreg);
-            vreg_set_level(vreg, 2800);
-        }
-        else {
-        	pr_info("ssd2531 power off\n");
-            
-            vreg_set_level(vreg, 0);
-            vreg_disable(vreg);            
-    		gpio_tlmm_config(GPIO_CFG(122, 0, GPIO_INPUT,
-                GPIO_NO_PULL, GPIO_16MA), GPIO_ENABLE);
-    		gpio_tlmm_config(GPIO_CFG(123, 0, GPIO_INPUT,
-                GPIO_NO_PULL, GPIO_16MA), GPIO_ENABLE);
-            
-            gpio_direction_output(30, 0);
-    		gpio_tlmm_config(GPIO_CFG(30, 0, GPIO_INPUT,
-                GPIO_NO_PULL, GPIO_16MA), GPIO_ENABLE);
-        	gpio_tlmm_config(GPIO_CFG(124,  0, GPIO_INPUT, GPIO_NO_PULL, GPIO_2MA), GPIO_ENABLE);            
-        }
-    }
-
-    return 0;
-}
-
-static struct ssd2531_platform_data ssd2531_ts_data[] = {
-    {
-        .pin_reset = 36,
-        .power = ssd2531_power,
-    }
-};
-
 static int cm3623_power(int on) {
     static struct vreg *vreg;
     if (!vreg) {
@@ -1426,7 +1358,6 @@ static void config_gpio_table(uint32_t *table, int len)
 
 static struct vreg *vreg_gp2;
 static struct vreg *vreg_gp3;
-static struct vreg *vreg_msme2;
 
 static struct msm_camera_sensor_flash_src msm_flash_src = {
 	.flash_sr_type = MSM_CAMERA_FLASH_SRC_PMIC,
@@ -2422,7 +2353,6 @@ static void __init msm7x2x_init_host(void)
 
 static unsigned long vreg_sts, gpio_sts;
 static struct vreg *vreg_mmc;
-static unsigned mpp_mmc = 2;
 
 struct sdcc_gpio {
 	struct msm_gpio *cfg_data;
@@ -2822,8 +2752,6 @@ static void __init msm7x2x_init(void)
 {
 //struct vreg *vreg_bt;
 //int rc;
-	if (socinfo_init() < 0)
-		BUG();
 	wlan_power(1);
 	msm_clock_init(msm_clocks_7x27, msm_num_clocks_7x27);
 	platform_add_devices(early_devices, ARRAY_SIZE(early_devices));
@@ -3057,13 +2985,22 @@ static void __init msm7x2x_map_io(void)
 	msm_map_common_io();
 	msm_msm7x2x_allocate_memory_regions();
 
+	if (socinfo_init() < 0)
+		BUG();
 #ifdef CONFIG_CACHE_L2X0
 	if (machine_is_msm7x27_surf() || machine_is_msm7x27_ffa()) {
 		/* 7x27 has 256KB L2 cache:
-			64Kb/Way and 4-Way Associativity;
-			R/W latency: 3 cycles;
-			evmon/parity/share disabled. */
-		l2x0_init(MSM_L2CC_BASE, 0x00068012, 0xfe000000);
+		   64Kb/Way and 4-Way Associativity;
+		   evmon/parity/share disabled. */
+		if ((SOCINFO_VERSION_MAJOR(socinfo_get_version()) > 1)
+				|| ((SOCINFO_VERSION_MAJOR(socinfo_get_version()) == 1)
+					&& (SOCINFO_VERSION_MINOR(socinfo_get_version()) >= 3)))
+			/* R/W latency: 4 cycles; */
+			l2x0_init(MSM_L2CC_BASE, 0x0006801B, 0xfe000000);
+		else
+			/* R/W latency: 3 cycles; */
+			l2x0_init(MSM_L2CC_BASE, 0x00068012, 0xfe000000);
+
 	}
 #endif
 }

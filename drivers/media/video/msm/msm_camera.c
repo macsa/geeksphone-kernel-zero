@@ -438,9 +438,15 @@ static int __msm_get_frame(struct msm_sync *sync,
 		return -EAGAIN;
 	}
 
+	if ((!qcmd->command) && (qcmd->error_code & MSM_CAMERA_ERR_MASK)) {
+		frame->error_code = qcmd->error_code;
+		CDBG("%s: fake frame with camera error code = %d\n", __func__,
+			frame->error_code);
+		goto err;
+	}
+
 	vdata = (struct msm_vfe_resp *)(qcmd->command);
 	pphy = &vdata->phy;
-
 
 	rc = msm_pmem_frame_ptov_lookup(sync,
 			pphy->y_phy,
@@ -578,11 +584,13 @@ static struct msm_queue_cmd *__msm_control(struct msm_sync *sync,
 			queue->wait,
 			!list_empty_careful(&queue->list),
 			timeout);
-	CDBG("Waiting over for config status \n");
+	CDBG("Waiting over for config status\n");
 	if (list_empty_careful(&queue->list)) {
-		if (!rc)
+		if (!rc) {
 			rc = -ETIMEDOUT;
-		if (rc < 0) {
+			pr_err("%s: wait_event error %d\n", __func__, rc);
+			return ERR_PTR(rc);
+		} else if (rc < 0) {
 			pr_err("%s: wait_event error %d\n", __func__, rc);
 			return ERR_PTR(rc);
 		}
@@ -677,7 +685,7 @@ static int msm_control(struct msm_control_device *ctrl_pmsm,
 
 	qcmd_resp = __msm_control(sync,
 				  &ctrl_pmsm->ctrl_q,
-				  &qcmd, MAX_SCHEDULE_TIMEOUT);
+				  &qcmd, msecs_to_jiffies(10000));
 
 	if (!qcmd_resp || IS_ERR(qcmd_resp)) {
 		/* Do not free qcmd_resp here.  If the config thread read it,
@@ -1652,6 +1660,23 @@ static int msm_set_crop(struct msm_sync *sync, void __user *arg)
 	return 0;
 }
 
+static int msm_error_config(struct msm_sync *sync, void __user *arg)
+{
+	struct msm_queue_cmd *qcmd =
+		kmalloc(sizeof(struct msm_queue_cmd), GFP_KERNEL);
+
+	if (copy_from_user(&(qcmd->error_code), arg, sizeof(uint32_t))) {
+		ERR_COPY_FROM_USER();
+		return -EFAULT;
+	}
+
+	CDBG("%s: Enqueue Fake Frame with error code = %d\n", __func__,
+		qcmd->error_code);
+	msm_enqueue(&sync->frame_q, &qcmd->list_frame);
+
+	return 0;
+}
+
 static int msm_pp_grab(struct msm_sync *sync, void __user *arg)
 {
 	uint32_t enable;
@@ -1831,6 +1856,10 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 					sdata->flash_data, led_state);
 		break;
 	}
+
+	case MSM_CAM_IOCTL_ERROR_CONFIG:
+		rc = msm_error_config(pmsm->sync, argp);
+		break;
 
 	default:
 		rc = msm_ioctl_common(pmsm, cmd, argp);
