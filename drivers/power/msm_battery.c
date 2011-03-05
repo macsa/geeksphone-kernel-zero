@@ -567,7 +567,7 @@ static void msm_batt_update_psy_status(void)
 
 
 #ifdef FEATRUE_BATTERY_CUST
-    printk(KERN_ERR "[VBAT] Update voltage cust without report upward ");
+    //printk(KERN_ERR "[VBAT] Update voltage cust without report upward ");
     msm_batt_capacity_cust(battery_voltage);
 #endif    
 
@@ -1374,7 +1374,7 @@ static u32 msm_batt_capacity_cust(u32 current_voltage)
     static u32 pre_status = CHARGER_TYPE_NONE;
     u32 cur_status = msm_batt_info.charger_type;//msm_batt_info.batt_status;
 
-    printk(KERN_ERR "[VBAT] msm_batt_capacity_cust() ++++++ ");
+    //printk(KERN_ERR "[VBAT] msm_batt_capacity_cust() ++++++ ");
 
 #if 0
     {//Debuging code
@@ -1444,8 +1444,8 @@ static u32 msm_batt_capacity_cust(u32 current_voltage)
         delay  = 0;
     }
 
-    printk(KERN_ERR "[VBAT] Pre+++  curV<%d>,  curP<%d>,  preP<%d> , delay<%d>, curS<%d>, preS<%d>",  
-        current_voltage, cur_percentage, pre_percentage, delay, cur_status, pre_status);
+    /*printk(KERN_ERR "[VBAT] Pre+++  curV<%d>,  curP<%d>,  preP<%d> , delay<%d>, curS<%d>, preS<%d>",  
+        current_voltage, cur_percentage, pre_percentage, delay, cur_status, pre_status);*/
 
     if( (abs(cur_percentage - pre_percentage) > 6) && ( delay < 0 )  )//??
     {   //No rise no drop
@@ -1471,8 +1471,8 @@ static u32 msm_batt_capacity_cust(u32 current_voltage)
 
     pre_status = cur_status;
 
-    printk(KERN_ERR "[VBAT] Post---  curV<%d>,  curP<%d>,  preP<%d>, delay<%d>, curS<%d>, preS<%d>",
-        current_voltage, cur_percentage, pre_percentage, delay, cur_status, pre_status);
+    /*printk(KERN_ERR "[VBAT] Post---  curV<%d>,  curP<%d>,  preP<%d>, delay<%d>, curS<%d>, preS<%d>",
+        current_voltage, cur_percentage, pre_percentage, delay, cur_status, pre_status);*/
 
     return cur_percentage;
         
