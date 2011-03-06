@@ -39,12 +39,7 @@
 
 #include <mach/msm_rpcrouter.h>
 #include <mach/msm_battery.h>
-#include <linux/compile.h>
 #include <linux/module.h>
-#include <linux/uts.h>
-#include <linux/utsname.h>
-#include <linux/utsrelease.h>
-#include <linux/version.h>
 #include <linux/suspend.h>
 #include <linux/input.h>
 #include <linux/irq.h>

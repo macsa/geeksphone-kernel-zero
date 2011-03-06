@@ -16,12 +16,7 @@
 
 #include <mach/msm_rpcrouter.h>
 #include <mach/msm_battery.h>
-#include <linux/compile.h>
 #include <linux/module.h>
-#include <linux/uts.h>
-#include <linux/utsname.h>
-#include <linux/utsrelease.h>
-#include <linux/version.h>
 #include <mach/oem_rapi_client.h>
 #include <linux/semaphore.h>
 ssize_t rpc_client_misc_read(struct file *filp,char __user *buf,size_t count, loff_t *f_pos)
