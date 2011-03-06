@@ -204,7 +204,9 @@ static void synaptics_ts_report(
     struct synaptics_ts_finger *finger,
     int num)
 {
+#ifdef CONFIG_TOUCHSCREEN_VRPANEL
     int invalid_x = 0, invalid_y = 0;
+#endif
     int pos[num][2];
 				int f, a;
     int z = 0, w = 0;
@@ -252,17 +254,21 @@ static void synaptics_ts_report(
     
     for (f = s_num = 0; f < num; f++) {
         if (finger[f].State) {
+#ifdef CONFIG_TOUCHSCREEN_VRPANEL
             if (pos[f][1] < 480) {
+#endif
             	input_report_abs(ts->input_dev, ABS_MT_POSITION_X, pos[f][0]);
             	input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, pos[f][1]);
                 z = finger[f].Z;
                 w = (finger[f].Wx + finger[f].Wy) / 2;
                 s_num++;
+#ifdef CONFIG_TOUCHSCREEN_VRPANEL
             }
             else {
                 invalid_x = pos[f][0];
                 invalid_y = pos[f][1];
             }
+#endif
         }
 					input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, z);
 					input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, w);
@@ -645,6 +651,11 @@ static int synaptics_ts_probe(
 
 #ifdef CONFIG_TOUCHSCREEN_VRPANEL
 	VrpInit(ts->input_dev, NULL);
+#else
+	set_bit(KEY_HOME, ts->input_dev->keybit);
+	set_bit(KEY_MENU, ts->input_dev->keybit);
+	set_bit(KEY_BACK, ts->input_dev->keybit);
+	set_bit(KEY_SEARCH, ts->input_dev->keybit);
 #endif
 
 	return 0;

@@ -2308,6 +2308,39 @@ static void __init msm_fb_add_devices(void)
 
 extern struct sys_timer msm_timer;
 
+#ifndef CONFIG_TOUCHSCREEN_VRPANEL
+static ssize_t pw28_virtual_keys_show(struct kobject *kobj,
+		struct kobj_attribute *attr, char *buf)
+{
+	/* Dimensions, 80x60, y starts at 480
+	center: x: home: 40, menu: 120, back: 200, search 280, y: 520 */
+	return sprintf(buf,
+			__stringify(EV_KEY) ":" __stringify(KEY_HOME)  ":40:520:60:60"
+			":" __stringify(EV_KEY) ":" __stringify(KEY_MENU)   ":120:520:60:60"
+			":" __stringify(EV_KEY) ":" __stringify(KEY_BACK)   ":200:520:60:60"
+			":" __stringify(EV_KEY) ":" __stringify(KEY_SEARCH) ":280:520:60:60"
+			"\n");
+}
+
+static struct kobj_attribute pw28_virtual_keys_attr = {
+	.attr = {
+		.name = "virtualkeys.synaptics-rmi-touchscreen",
+		.mode = S_IRUGO,
+	},
+	.show = &pw28_virtual_keys_show,
+};
+
+static struct attribute *pw28_properties_attrs[] = {
+	&pw28_virtual_keys_attr.attr,
+	NULL
+};
+
+static struct attribute_group pw28_properties_attr_group = {
+	.attrs = pw28_properties_attrs,
+};
+
+#endif
+
 static void __init msm7x2x_init_irq(void)
 {
 	msm_init_irq();
@@ -2752,6 +2785,9 @@ static void __init msm7x2x_init(void)
 {
 //struct vreg *vreg_bt;
 //int rc;
+#ifndef CONFIG_TOUCHSCREEN_VRPANEL
+	struct kobject *properties_kobj;
+#endif
 	wlan_power(1);
 	msm_clock_init(msm_clocks_7x27, msm_num_clocks_7x27);
 	platform_add_devices(early_devices, ARRAY_SIZE(early_devices));
@@ -2886,6 +2922,18 @@ static void __init msm7x2x_init(void)
 	msm7x2x_init_host();
 #endif
 	msm7x2x_init_mmc();
+
+#ifndef CONFIG_TOUCHSCREEN_VRPANEL
+	properties_kobj = kobject_create_and_add("board_properties", NULL);
+	if (properties_kobj) {
+		if (sysfs_create_group(properties_kobj,
+					&pw28_properties_attr_group))
+			pr_err("failed to create board_properties\n");
+	} else {
+		pr_err("failed to create board_properties\n");
+	}
+#endif
+
 	bt_power_init();
 
 	if (cpu_is_msm7x27())
